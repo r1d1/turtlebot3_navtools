@@ -3,7 +3,7 @@ include/pr2_navigation
 msg/behaviour.msg
 msg/commande_action.msg
 msg/state.msg
-src/NavService.srv
+srv/NavService.srv
 src/ActToMove.*
 src/click_turn.*
 src/encours
