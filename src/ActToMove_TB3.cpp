@@ -68,7 +68,6 @@ ActToMove_TB3::ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, floa
 	control_sub = nh.subscribe("controlEnable", 1, &ActToMove_TB3::controlCallback, this);
 	
 	baseScan_sub = nh.subscribe("scan", 1, &ActToMove_TB3::bLaserCallback, this);
-	bumpers_sub = nh.subscribe("mobile_base/events/bumper", 1, &ActToMove_TB3::bumperCallback, this);
 	 
 
 	pose_sub = nh.subscribe("odom", 1, &ActToMove_TB3::poseCallback, this);
@@ -98,13 +97,9 @@ ActToMove_TB3::ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, floa
 	deltaAccu = 1;
 
 
-	bumped = false;	
 	enable = true;
 	explo = e;
 	noLaserData = true; 
-	// Initially, no contact detected :
-	bumperData[0] = bumperData[1] = bumperData[2] = false;
-	bumperEdgeData[0] = bumperEdgeData[1] = bumperEdgeData[2] = 0;
 
 	//cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1);
 	cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
@@ -131,79 +126,6 @@ void ActToMove_TB3::bLaserCallback( const sensor_msgs::LaserScan & msg)
 	//std::cout << "scan rate : " << scanDataRate << std::endl;
 }
 
-int ActToMove_TB3::getBumpCode()
-{
-	return bumperData[0] + 2*bumperData[1] + 4*bumperData[2];
-}
-
-void ActToMove_TB3::processBumpCode(int code)
-{
-    std::cout << "Bumpers callback" << std::endl;
-	// If we bumped, we trigger specific behavior to go back and reorient. We set flags for that :
-	backwardDist = 0.2;
-	if( bumped ) // if we bumped, lets start a backward command
-	{
-		std::cout << "ProcessBumpCode - bumped True" << std::endl;
-		backwards = true;
-		backStep = 0;
-		pos_start_b_x = receivedPose.pose.pose.position.x;
-		pos_start_b_y = receivedPose.pose.pose.position.y;
-		targetAngle = 180.0 * tf::getYaw(receivedPose.pose.pose.orientation) / PI;
-		float offsetAngle = 30.0;
-		switch(code)
-		{
-		case 1:
-			targetAngle += -offsetAngle;
-		break;
-		case 2:
-			targetAngle += (1.0 - 2.0* (rand()%2)) * offsetAngle;
-		//	rotateTo = (1.0 - 2.0* (rand()%2));
-		break;
-		case 4:
-			targetAngle += offsetAngle;
-			//rotateTo = 1;
-		break;
-		case 3: // L & C
-			targetAngle += -offsetAngle;
-			//rotateTo = -1;
-		break;
-		case 6: // R & C
-			//rotateTo = 1;
-			targetAngle += offsetAngle;
-		break;
-		case 5: // L & R : should not happen
-			ROS_ERROR("Huh ?");
-		break;
-		case 7: // L & C & R
-			targetAngle += (1.0 - 2.0* (rand()%2)) *120;
-		break;
-		default:
-			ROS_ERROR("Erroneous value !");	
-			exit(EXIT_FAILURE);
-		break;
-		}
-		bumped = false;	
-	}
-	else
-	{
-		//backwards = false;
-	}
-}
-
-void ActToMove_TB3::bumperCallback( const kobuki_msgs::BumperEvent & msg)
-{
-	//int edge = bumperData[unsigned(msg.bumper)] - unsigned(msg.state);
-	bumperEdgeData[0] = bumperEdgeData[1] = bumperEdgeData[2] = 0;
-	bumperEdgeData[unsigned(msg.bumper)] = unsigned(msg.state) - bumperData[unsigned(msg.bumper)];
-	bumperData[unsigned(msg.bumper)] = unsigned(msg.state);
-	// Filtering for rising edge :
-	bumped = (bumperEdgeData[unsigned(msg.bumper)] == 1);
-	std::cout << "msg : " << unsigned(msg.state) << ", " << unsigned(msg.bumper) << std::endl;
-//	std::cout << "edge : " << edge << std::endl;
-	// enable = !unsigned(msg.state);
-//	std::cout << "Edges : " << bumperEdgeData[0] << ", " << bumperEdgeData[1] << ", " << bumperEdgeData[2] << ", bumped: " << bumped << std::endl;
-}
-
 void ActToMove_TB3::timerCallback(const ros::TimerEvent & ) 
 {
 	base_cmd.angular.z = 0.0;
@@ -212,8 +134,6 @@ void ActToMove_TB3::timerCallback(const ros::TimerEvent & )
 	// Update obstruction data :
 	// (processing laser)
 	computeObstruction();
-	// (processing bumpers)
-	//processBumpCode(getBumpCode());		
 	// ---------------------------
 	if( enable )
 	{	if( explo )
@@ -473,7 +393,6 @@ void ActToMove_TB3::drive()
 		switch(backStep)
 		{
 			case 0: // backwards
-		//		std::cout << "Backwards 0, bumped " << bumped << ", backwards : " << backwards << std::endl;
 				linear_vel = -max_lin_vel;
 				angular_vel = 0.0;
 //				std::cout << "backdist : " << pos_dist_b << ", " << backwardDist << std::endl;
@@ -482,7 +401,6 @@ void ActToMove_TB3::drive()
 				else{ if( pos_dist_b > backwardDist ){ backwards = false; pos_dist = actionDistance+0.1; } } // If we don't explore, we consider bump to finish action (driven distance forced to max action distance)
 			break;
 			case 1: // reorient
-		//		std::cout << "Backwards 1, bumped " << bumped << ", backwards : " << backwards << std::endl;
 				err = orientTowards(targetAngle);
 				std::cout << "backstep 1 : " << err << ", " << targetAngle << ", " << robotAngle << ", " << base_cmd.angular.z << ", " << angular_vel << std::endl;
 				// This is a hack because orientTowards directly modifies the message base_cmd but we use an intermediate variable angular vel
@@ -508,28 +426,24 @@ void ActToMove_TB3::drive()
 			filtre_diff_close = filtering_coef * filtre_diff_close + (1-filtering_coef) * diff_close;
 			direction = (filtre_diff_close < 0) ? -1 : 1;
 		
-			//~~~~ cas 1: tres proche ~~~~
+			//~~~~ case 1: very close ~~~~
 			if( cMinXPt->x < max_distance_stop ) 	
 			{
-				//std::cout << "Normal 0, bumped : " << bumped << ", backwards : " << backwards << std::endl;
-				//ROS_WARN("B 1");
 				// Stop and turn to less obstructed side
 				linear_vel = 0.0; //STOP
 				angular_vel = direction * max_ang_vel;
 			}
-			//~~~~ cas 2 : Obstacle apparait au loin  ~~~~
+			//~~~~ case 2 : Obstacle at midrange  ~~~~
 			else if( cMinXPt->x <= max_distance_slower) 	
 			{
-				//std::cout << "Normal 1, bumped " << bumped << ", backwards : " << backwards << std::endl;
 				//ROS_WARN("B 2");
 				// Progressively slowing and turning to most open direction
 				linear_vel = max_lin_vel/2*(sin((a*cMinXPt->x+b)*M_PI/180) + 1) ;
 				angular_vel = max_ang_vel/2*(-sin((a*cMinXPt->x+b)*M_PI/180) +1)* direction ;
 			}
-			//~~~~ cas 4 : Va tout droit  ~~~~
+			//~~~~ case 3 : Go straight  ~~~~
 			else
 			{
-				//std::cout << "Normal 2, bumped " << bumped << ", backwards : " << backwards << std::endl;
 				//ROS_WARN("B 4");
 				// Explo, so we don't need any fonction :
 				linear_vel = max_lin_vel; // * fcmd(pos_dist, actionDistance, 0.2);
@@ -570,8 +484,6 @@ void ActToMove_TB3::drive()
 	}
 
 	// Making speed saturate :
-//	std::cout << "pos_dist : " << pos_dist << std::endl;
-//	std::cout << "vels : " << angular_vel << ", " << max_ang_vel << std::endl;
 	if (linear_vel > max_lin_vel ){ linear_vel = max_lin_vel; }
 	if (linear_vel < -max_lin_vel ){ linear_vel = -max_lin_vel; }
 	if (angular_vel > max_ang_vel ){ angular_vel = max_ang_vel; }
@@ -579,8 +491,6 @@ void ActToMove_TB3::drive()
 	
 	base_cmd.linear.x =  linear_vel ;
 	base_cmd.angular.z = angular_vel;
-//	std::cout << "vels 2 : " << angular_vel << ", " << max_ang_vel << std::endl;
-//	std::cout << "vels 2 : " << base_cmd.angular.z << ", " << angular_vel << ", " << max_ang_vel << std::endl;
 }
 
 // ====================================
