@@ -142,7 +142,7 @@ class ActToMove_TB3
 	public :
 		//ActToMove_TB3(ros::NodeHandle &nh, Obstacle *obst);
 		//ActToMove_TB3(ros::NodeHandle &nh_, Obstacle* obst, int a, float s, float p, float i, float d);
-		ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, float d, bool e, float ad, bool iR);
+		ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, float d, bool e, float ad);
 		//void orientTowards(float goalAngle);
 		float orientTowards(float goalAngle);
 	  	void behavior();
