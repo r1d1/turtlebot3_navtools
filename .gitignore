@@ -1,3 +1,11 @@
+# Explicitely excluding folders and files that are remains of PR2 code and other copypastes
 include/pr2_navigation
 src/NavService.srv
+src/ActToMove.*
+src/click_turn.*
+src/encours
+src/run_stop_pr2.cpp
+src/state_slam.*
 
+# vim temp files:
+*.swp
