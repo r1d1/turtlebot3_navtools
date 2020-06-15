@@ -1,5 +1,8 @@
 # Explicitely excluding folders and files that are remains of PR2 code and other copypastes
 include/pr2_navigation
+msg/behaviour.msg
+msg/commande_action.msg
+msg/state.msg
 src/NavService.srv
 src/ActToMove.*
 src/click_turn.*
