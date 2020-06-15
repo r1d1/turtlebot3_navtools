@@ -17,18 +17,15 @@
 #define DIST_OBSTACLE 1.0 // max distance where measured obstacle are considered
 
 // Thresholds for random rotation when going straight
-#define SEUIL_HAUT 300
-#define SEUIL_BAS 0
+#define THRESHOLD_HIGH 300
+#define THRESHOLD_LOW 0
 
 //*******variables**********
-float dist_maxi_stop=0.4; // 0.3 dead kinect view + 0.66 * robot diameter ; empirical value
-float dist_maxi_ralenti=1.0; // 	cf "longueur couloir" de obstacle2.cpp 
+float max_distance_stop=0.4; // 0.3 dead kinect view + 0.66 * robot diameter ; empirical value
+float max_distance_slower=1.0; // 	cf "longueur couloir" de obstacle2.cpp 
 int min_lin_vel=0;
 
-float coef_filtrage= 0.99999;		// pour éviter le dte gauche en face de trous
-//float coef_filtrage= 0.999995;		// pour éviter le dte gauche en face de trous
-float largeurmilieu=0.7;
-ros::Duration duree_balayage = ros::Duration(2);
+float filtering_coef= 0.99999;		// avoid right-left behavior of the robot
 
 //*******/variables**********
 
@@ -50,7 +47,7 @@ float actionToAngle(float action, float actionnumber)
 void ActToMove_TB3::setMaxSpeedValues(float a, float b){ max_lin_vel = a; max_ang_vel = b; }
 
 //ActToMove_TB3::ActToMove_TB3(ros::NodeHandle &nh_, Obstacle* obst, int a, float s, float p, float i, float d)
-ActToMove_TB3::ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, float d, bool e, float ad=ACTIONDISTANCE, bool isRobotino=false)
+ActToMove_TB3::ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, float d, bool e, float ad=ACTIONDISTANCE)
 {
 	std::cout << "param: " << a << ", " << ", " << p << ", " << i << ", " << d << std::endl;
 	/* Node handle that manage the node and provide publishing and subscribing function */
@@ -462,8 +459,8 @@ void ActToMove_TB3::drive()
 	float linear_vel = 0.0;
 	float angular_vel = 0.0;
 	//pour l'equation sin(ax+b) atteigne le min et le max aux valeurs souahitees 
-	float a= 2*90/(dist_maxi_ralenti - dist_maxi_stop);
-	float b= 90 * (dist_maxi_stop + dist_maxi_ralenti)/(dist_maxi_stop - dist_maxi_ralenti);
+	float a= 2*90/(max_distance_slower - max_distance_stop);
+	float b= 90 * (max_distance_stop + max_distance_slower)/(max_distance_stop - max_distance_slower);
 
 	// ---------------------------------------------
 	//std::cout << "Poses & Percents & Flags : " << pos_dist << ", " << pos_dist_b << ", " << leftObsPercent << ", " << centObsPercent << ", " << rightObsPercent << " | " << (backwards ? "back": "front") << ", " << (backLeft ? "BL": "/BL") << ", " <<(backRight ? "BR": "/BR") << ", " << (backStep ? "Step 1":"Step 2") << std::endl;
@@ -508,11 +505,11 @@ void ActToMove_TB3::drive()
 
 			// Then compute speed command depending on obstacles
 			float diff_close = rightObsPercent - leftObsPercent;
-			filtre_diff_close = coef_filtrage * filtre_diff_close + (1-coef_filtrage) * diff_close;
+			filtre_diff_close = filtering_coef * filtre_diff_close + (1-filtering_coef) * diff_close;
 			direction = (filtre_diff_close < 0) ? -1 : 1;
 		
 			//~~~~ cas 1: tres proche ~~~~
-			if( cMinXPt->x < dist_maxi_stop ) 	
+			if( cMinXPt->x < max_distance_stop ) 	
 			{
 				//std::cout << "Normal 0, bumped : " << bumped << ", backwards : " << backwards << std::endl;
 				//ROS_WARN("B 1");
@@ -521,7 +518,7 @@ void ActToMove_TB3::drive()
 				angular_vel = direction * max_ang_vel;
 			}
 			//~~~~ cas 2 : Obstacle apparait au loin  ~~~~
-			else if( cMinXPt->x <= dist_maxi_ralenti) 	
+			else if( cMinXPt->x <= max_distance_slower) 	
 			{
 				//std::cout << "Normal 1, bumped " << bumped << ", backwards : " << backwards << std::endl;
 				//ROS_WARN("B 2");
@@ -539,14 +536,14 @@ void ActToMove_TB3::drive()
 				accuRandom += deltaAccu;
 				if(explo)
 				{
-					if( accuRandom > SEUIL_HAUT )
+					if( accuRandom > THRESHOLD_HIGH )
 					{
 						deltaAccu = -1; 
 						prev_ang_vel = angular_vel = (1 - 2 * (rand() % 2)) * max_ang_vel / 2.0;
 					}
 					else
 					{
-						if( accuRandom < SEUIL_BAS ){ deltaAccu = 1; prev_ang_vel = angular_vel = 0.0; }
+						if( accuRandom < THRESHOLD_LOW ){ deltaAccu = 1; prev_ang_vel = angular_vel = 0.0; }
 						else{ angular_vel = prev_ang_vel; }
 					}
 //					std::cout << "Accu :! " << accuRandom << std::endl;
@@ -611,10 +608,9 @@ int main(int argc, char** argv)
 	float s=DEFAULT_MAXSPEED, w=DEFAULT_MAXSPEED, p=0.0, i=0.0 , d=0.0; // s parameter in constructor is useless ; it is used with setter 
 	int a=DEFAULT_NBDIRECTIONS;
 	bool e = false;
-    bool isRobotino = false;
 	float ad=ACTIONDISTANCE;
 
-	while( (opt = getopt(argc, argv, "ewsapidhzr") ) != -1)
+	while( (opt = getopt(argc, argv, "ewsapidhz") ) != -1)
 	{
 		switch(opt)
 		{
@@ -638,9 +634,6 @@ int main(int argc, char** argv)
 			break;
 			case 'i' : // I coeff
 				i = atof(argv[optind]);
-			case 'r' : // I coeff
-				isRobotino = true;
-			break;
 			case 'd' : // D coeff
 				d = atof(argv[optind]);
 			break;
@@ -674,13 +667,12 @@ int main(int argc, char** argv)
     std::cout << " Max L speed : " << s << std::endl;
     std::cout << " K_p : " << p << std::endl;
     std::cout << " K_i : " << i << std::endl;
-    std::cout << " Robotino?: " << isRobotino << std::endl;
     std::cout << " K_d : " << d << std::endl;
 	
 //	Obstacle obst(node);
 	//std::cout<<"111"<< std::endl;
 	//ActToMove_TB3 tCtrl(nh,&obst, a, s, p, i, d);// while
-	ActToMove_TB3 tCtrl(nh, a, p, i, d, e, isRobotino);// while
+	ActToMove_TB3 tCtrl(nh, a, p, i, d, e);// while
 	tCtrl.setMaxSpeedValues(s, w);
 	tCtrl.run();
 	
