@@ -323,6 +323,8 @@ void ActToMove_TB3::computeObstruction()
 	
 	for(int i = 0 ; i < laserscanToPCL.points.size() ; i++)
 	{
+        // TB3 has a 360deg scan whereas TB2 only had 180 so we need 
+        // to check for x to exclude points in the back of the robot
         if( laserscanToPCL.points[i].x > 0 )
         {
 		    float y = laserscanToPCL.points[i].y;
@@ -347,6 +349,7 @@ void ActToMove_TB3::computeObstruction()
 	for(int i = 0 ; i < rightCluster.points.size() ; i++){ if(rightCluster.points[i].x < DIST_OBSTACLE){rightObsPercent += 1.0 / rightCluster.points.size(); } }
 	for(int i = 0 ; i < centCluster.points.size() ; i++){ if(centCluster.points[i].x < DIST_OBSTACLE){centObsPercent += 1.0 / centCluster.points.size(); } }
 
+    // for visualisation of each cluster in rviz
     debug_leftCluster_pub.publish(leftCluster); 
     debug_centCluster_pub.publish(centCluster); 
     debug_rightCluster_pub.publish(rightCluster);
