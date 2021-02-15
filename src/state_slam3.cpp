@@ -48,10 +48,10 @@ state_slam3::state_slam3(ros::NodeHandle &nh_, float cell_rad=RAYON_CELL)
 	statereward_pub = nh.advertise<BP_experiment::StateReward>("statereward", 1);
 	state_pub = nh.advertise<BP_experiment::State>("statealone", 1);
 	reward_sub = nh.subscribe("rewardalone", 1, &state_slam3::reward_received, this);
-	validActions_sub = nh.subscribe("validactions", 1, &state_slam3::validActionCallback, this);
+	validActions_sub = nh.subscribe("valid_actions", 1, &state_slam3::validActionCallback, this);
 	
 	Scan_filter_sub = nh.subscribe("scan", 1, &state_slam3::base_received, this);
-	actionControl_sub = nh.subscribe("actionFinished", 1, &state_slam3::actionControlCallback, this);
+	actionControl_sub = nh.subscribe("action_finished", 1, &state_slam3::actionControlCallback, this);
 	command_sub = nh.subscribe("commandStateSlam", 1, &state_slam3::controlCallback, this);
 
 	poly_stamp.polygon.points.reserve(NBRE_POINTS_POLY);
@@ -122,7 +122,6 @@ void  state_slam3::base_received( const sensor_msgs::LaserScan & msg)
 			computeDistToCenters();
 		}
 		
-		//gestionCellPoly();
 		displayVoronoiCenters();
 
 		if (abs(current_position.x-old_position.x)>0.05 || abs(current_position.y-old_position.y)>0.05)
@@ -170,17 +169,10 @@ void  state_slam3::base_received( const sensor_msgs::LaserScan & msg)
 
 //============================================================================================
 
-//void  state_slam3::reward_received( const BP_experiment::Reward & msg) 
 void  state_slam3::reward_received( const std_msgs::Float32 & msg) 
 {
-	//Reward=msg.reward;
 	Reward=msg.data;
 	std::cout<< "Got Reward !  reward="<<Reward<<", msg.reward="<< msg.data << std::endl;
-	
-	// Erwan addition :
-	// This two lines may be because of svn merging ...
-	// flagRewardReceived = false;
-	// end of addition
 	flagRewardReceived = true;
 }
 
@@ -351,103 +343,6 @@ void state_slam3::create_cell()
 	}
 	vector_cell_poly.push_back(tab_point);
 	vector_centre_poly.push_back(current_position);
-}
-
-//--------------------------------------------------------------------------------------------
-
-void state_slam3::gestionCellPoly()
-{	
-	int size_vect=vector_cell_poly.size(); 
-	bool reco=0;
-	min1=500;
-	indice_min1=99;
-	min2=500;
-	indice_min2=99;
-	min3=500;
-	indice_min3=99;
-	
-	string mess;
-	it=0;
-	if (first==0)
-	{
-		first=1;
-		create_cell();
-		crea << ros::Time::now() << "," << transform_base.getOrigin().x() << "," <<transform_base.getOrigin().y() <<","<<indice_min1<<","<<indice_min2<<","<<indice_min3<<"," <<APP<<",";
-		for (int k = 0; k< NBRE_POINTS_POLY; k++)	// ON stocke le vecteur crée juste avant
-		{
-			crea << vector_cell_poly[vector_cell_poly.size()-1][k].x <<","<< vector_cell_poly[vector_cell_poly.size()-1][k].y <<",";	// juste pour recup données ac matplotlib 
-		}
-		crea<<std::endl ;
-	}
-	else
-	{
-		for (int j = 0; j<   size_vect; j++)	// pour chaque polygone enregistré
-		{
-			//IsIn retourne true ou false selon si on est dans un poygone ou pas, elle MAJ dist_cell_mini_IsIn qui est la dist du current_point par rapport à l'arête la plus proche pour le polygone considere num j 
-			if (IsIn(current_position,vector_cell_poly[j])==IN)	
-			{
-				WhoIsCloser(j);	// MAJ des 3 premieres cells 
-				it++;	
-			}
-			else// les poly se chevauchant on sépare la comparaison du plus proche selon si il est IN ou OUT du poly, le it permet de donner la priorite aux poly IN par rapport aux OUT 
-			{
-				if (IsIn(current_position,vector_cell_poly[j])==NEAR ) it++;	
-				WhoIsCloser(j);	
-			}
-			displayPoly();
-		}
-		
-		if (it==0) 
-		{
-			create_cell();	
-			crea << ros::Time::now() << "," << transform_base.getOrigin().x() << "," <<transform_base.getOrigin().y() <<","<<indice_min1<<","<<indice_min2<<","<<indice_min3<<"," <<APP<<",";
-			for (int k = 0; k< NBRE_POINTS_POLY; k++)	// ON stocke le vecteur crée juste avant
-			{
-				crea << vector_cell_poly[vector_cell_poly.size()-1][k].x <<","<< vector_cell_poly[vector_cell_poly.size()-1][k].y <<",";	// juste pour recup données ac matplotlib 
-			}
-			crea<<std::endl ;
-			WhoIsCloserOut(size_vect);	
-		}
-	}
-	if (MESSAGE==0) mess = transformation(indice_min1);
-	if (MESSAGE==1) mess = transformation(indice_min1)+transformation(indice_min2)+transformation(indice_min3);
-	
-	//if (!(iterateur%5))
-	//{
-	//	if( it>0 )
-	//	{
-	//		recon << ros::Time::now() << "," << transform_base.getOrigin().x() << "," <<transform_base.getOrigin().y()<<","<<indice_min1<<","<<indice_min2<<","<<indice_min3<<","<<RECO<<std::endl;
-	//	}
-//		else{} //cell creee
-//	}
-	iterateur ++;
-	place_cell.stateID=mess;
-	place_cell.reward=Reward;
-		
-	place_cell_no_rwd.stateID=mess;
-	place_cell_no_rwd.stateType="Nav2";
-	
-	// Mod 03/10/2014 - Erwan ; Fix statetype for MF	
-	if (MESSAGE==0){ place_cell.stateType="Nav2"; }
-	if (MESSAGE==1){ place_cell.stateType="Nav"; }
-	
-	// checking flagRewardReceived : Erwan Addition to wait for reward before sending message (Science Fair hack)
-	//if ( (old_mess!=mess && ros::Time::now()> (clock_pub + ros::Duration(time_pub))) && flagRewardReceived )
-	// checking flagActionFinished : Erwan Addition to wait for action to finish before sending message (Nav experiment hack)
-	//if ( (old_mess!=mess && ros::Time::now()> (clock_pub + ros::Duration(time_pub))) && flagActionFinished )
-	if ( (ros::Time::now()> (clock_pub + ros::Duration(time_pub))) && flagActionFinished )
-	{
-		clock_pub=ros::Time::now();
-		std::cout << "\033[33mGestion cell poly - Publish StateReward info:\033[0m " << place_cell.stateID << ", " << place_cell.reward << std::endl;
-		statereward_pub.publish(place_cell);
-		state_pub.publish(place_cell_no_rwd);
-		Reward=0;
-		old_mess=mess;
-		// Erwan Addition to wait for reward before sending message (Science Fair hack)
-		//flagRewardReceived = false;
-		flagActionFinished=false;
-		// end of addition
-	}
 }
 
 //--------------------------------------------------------------------------------------------

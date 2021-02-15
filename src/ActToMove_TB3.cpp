@@ -103,10 +103,10 @@ ActToMove_TB3::ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, floa
 
 	//cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("mobile_base/commands/velocity", 1);
 	cmd_vel_pub_ = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-	actionFinished_pub = nh.advertise<std_msgs::Bool>("actionFinished", 1);
+	actionFinished_pub = nh.advertise<std_msgs::Bool>("turtlebot3/act2move/action_finished", 1);
 	actiondir_pub = nh.advertise<visualization_msgs::MarkerArray>("actionDir", 1);
 	// Not used on turtlebot, valid actions should be computed in timerCallback
-	validactions_pub = nh.advertise<BP_experiment::ValidActions>("validActions", 1);
+	validactions_pub = nh.advertise<BP_experiment::ValidActions>("turtlebot3/act2move/valid_actions", 1);
     debug_leftCluster_pub = nh.advertise<sensor_msgs::PointCloud>("turtlebot3/act2move/debug/leftCluster", 1);;
     debug_centCluster_pub = nh.advertise<sensor_msgs::PointCloud>("turtlebot3/act2move/debug/centCluster", 1);;
     debug_rightCluster_pub = nh.advertise<sensor_msgs::PointCloud>("turtlebot3/act2move/debug/rightCluster", 1);;
@@ -585,7 +585,7 @@ int main(int argc, char** argv)
 //	Obstacle obst(node);
 	//std::cout<<"111"<< std::endl;
 	//ActToMove_TB3 tCtrl(nh,&obst, a, s, p, i, d);// while
-	ActToMove_TB3 tCtrl(nh, a, p, i, d, e);// while
+	ActToMove_TB3 tCtrl(nh, a, p, i, d, e, ad);// while
 	tCtrl.setMaxSpeedValues(s, w);
 	tCtrl.run();
 	
