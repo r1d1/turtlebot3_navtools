@@ -116,7 +116,7 @@ ActToMove2::ActToMove2(ros::NodeHandle &nh_, int a, float p, float i, float d, b
 	actionFinished_pub = nh.advertise<std_msgs::Bool>("actionFinished", 1);
 	actiondir_pub = nh.advertise<visualization_msgs::MarkerArray>("actionDir", 1);
 	// Not used on turtlebot, valid actions should be computed in timerCallback
-	validactions_pub = nh.advertise<BP_experiment::ValidActions>("validActions", 1);
+	validactions_pub = nh.advertise<habelar_msgs::ValidActions>("validActions", 1);
 }
 
 void ActToMove2::bLaserCallback( const sensor_msgs::LaserScan & msg)
@@ -292,7 +292,7 @@ void ActToMove2::controlCallback(std_msgs::Bool msg)
 	if( enable ){ actionFinished_pub.publish(msg); }
 }
 
-void ActToMove2::actionCallback(BP_experiment::Actions msg)
+void ActToMove2::actionCallback(habelar_msgs::Actions msg)
 {
     std::cout << "action cb" << std::endl;
 	ROS_ERROR("Action callback : %d", msg.actionID);
@@ -714,7 +714,7 @@ int main(int argc, char** argv)
 			break;
 			case 'h' : // show Help option
 				std::cout   << " Help : " << std::endl
-					//		<< "Usage : rosrun BP_experiment qlneural <-h (help) | options>" << std::endl
+					//		<< "Usage : rosrun habelar_msgs qlneural <-h (help) | options>" << std::endl
 							<< "-s\t\t : Max linear speed of robot "  << std::endl
 							<< "-d\t\t : Number of directions available "  << std::endl
 							<< std::endl

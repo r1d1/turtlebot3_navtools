@@ -35,11 +35,11 @@
 #include <geometry_msgs/PolygonStamped.h>
 #include <geometry_msgs/Twist.h>
 
-#include "BP_experiment/StateReward.h"
-#include "BP_experiment/State.h"
-#include "BP_experiment/Reward.h"
-#include "BP_experiment/CommandSignal.h"
-#include "BP_experiment/ValidActions.h"
+#include "habelar_msgs/StateReward.h"
+#include "habelar_msgs/State.h"
+#include "habelar_msgs/Reward.h"
+#include "habelar_msgs/CommandSignal.h"
+#include "habelar_msgs/ValidActions.h"
 
 using std::vector;
 using std::string;
@@ -113,8 +113,8 @@ class state_slam3
 	ros::Publisher state_pub;
 	visualization_msgs::MarkerArray marker;
 	//promethe_app::NavService srvExp;
-	BP_experiment::StateReward place_cell;
-	BP_experiment::State place_cell_no_rwd;
+	habelar_msgs::StateReward place_cell;
+	habelar_msgs::State place_cell_no_rwd;
 
 public:
   //! Action client initialization 
@@ -122,12 +122,12 @@ public:
 	~state_slam3();
 
 	// Callbacks
-	//void reward_received( const BP_experiment::Reward & msg) ;
+	//void reward_received( const habelar_msgs::Reward & msg) ;
 	void reward_received(const std_msgs::Float32 & msg) ;
 	void actionControlCallback(const std_msgs::Bool & msg) ;
 	void base_received( const sensor_msgs::LaserScan & msg);
-	void controlCallback(const BP_experiment::CommandSignal & msg) ;
-	void validActionCallback( const BP_experiment::ValidActions & msg);
+	void controlCallback(const habelar_msgs::CommandSignal & msg) ;
+	void validActionCallback( const habelar_msgs::ValidActions & msg);
 
 	// "Voronoi"
 	void computeDistToCenters();

@@ -45,8 +45,8 @@ state_slam3::state_slam3(ros::NodeHandle &nh_, float cell_rad=RAYON_CELL)
 	first=0;
 	poly_pub = nh.advertise<geometry_msgs::PolygonStamped>("polygon_publish", 1);
 	clock=ros::Time::now();
-	statereward_pub = nh.advertise<BP_experiment::StateReward>("statereward", 1);
-	state_pub = nh.advertise<BP_experiment::State>("statealone", 1);
+	statereward_pub = nh.advertise<habelar_msgs::StateReward>("statereward", 1);
+	state_pub = nh.advertise<habelar_msgs::State>("statealone", 1);
 	reward_sub = nh.subscribe("rewardalone", 1, &state_slam3::reward_received, this);
 	validActions_sub = nh.subscribe("valid_actions", 1, &state_slam3::validActionCallback, this);
 	
@@ -177,7 +177,7 @@ void  state_slam3::reward_received( const std_msgs::Float32 & msg)
 }
 
 //validActions_sub = nh.subscribe("validactions", 1, &state_slam3::validActionCallback, this);
-void state_slam3::validActionCallback( const BP_experiment::ValidActions & msg)
+void state_slam3::validActionCallback( const habelar_msgs::ValidActions & msg)
 {
 //	std::cout << "Valid Actions : " << msg << std::endl;
 	validActions = msg.actionStatus;
@@ -190,7 +190,7 @@ void state_slam3::actionControlCallback(const std_msgs::Bool & msg)
 	flagActionFinished = msg.data;
 }
 
-void state_slam3::controlCallback(const BP_experiment::CommandSignal & msg)
+void state_slam3::controlCallback(const habelar_msgs::CommandSignal & msg)
 {
 	if(msg.save)
 	{

@@ -106,7 +106,7 @@ ActToMove_TB3::ActToMove_TB3(ros::NodeHandle &nh_, int a, float p, float i, floa
 	actionFinished_pub = nh.advertise<std_msgs::Bool>("turtlebot3/act2move/action_finished", 1);
 	actiondir_pub = nh.advertise<visualization_msgs::MarkerArray>("actionDir", 1);
 	// Not used on turtlebot, valid actions should be computed in timerCallback
-	validactions_pub = nh.advertise<BP_experiment::ValidActions>("turtlebot3/act2move/valid_actions", 1);
+	validactions_pub = nh.advertise<habelar_msgs::ValidActions>("turtlebot3/act2move/valid_actions", 1);
     debug_leftCluster_pub = nh.advertise<sensor_msgs::PointCloud>("turtlebot3/act2move/debug/leftCluster", 1);;
     debug_centCluster_pub = nh.advertise<sensor_msgs::PointCloud>("turtlebot3/act2move/debug/centCluster", 1);;
     debug_rightCluster_pub = nh.advertise<sensor_msgs::PointCloud>("turtlebot3/act2move/debug/rightCluster", 1);;
@@ -216,7 +216,7 @@ void ActToMove_TB3::controlCallback(std_msgs::Bool msg)
 	}
 }
 
-void ActToMove_TB3::actionCallback(BP_experiment::Actions msg)
+void ActToMove_TB3::actionCallback(habelar_msgs::Actions msg)
 {
     std::cout << "action cb" << std::endl;
 	ROS_ERROR("Action callback : %d", msg.actionID);
@@ -552,7 +552,7 @@ int main(int argc, char** argv)
 			break;
 			case 'h' : // show Help option
 				std::cout   << " Help : " << std::endl
-					//		<< "Usage : rosrun BP_experiment qlneural <-h (help) | options>" << std::endl
+					//		<< "Usage : rosrun habelar_msgs qlneural <-h (help) | options>" << std::endl
 							<< "-s\t\t : Max linear speed of robot "  << std::endl
 							<< "-d\t\t : Number of directions available "  << std::endl
 							<< std::endl

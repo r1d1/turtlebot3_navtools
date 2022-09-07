@@ -16,8 +16,8 @@
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
-#include "BP_experiment/Actions.h"
-#include "BP_experiment/ValidActions.h"
+#include "habelar_msgs/Actions.h"
+#include "habelar_msgs/ValidActions.h"
 
 #include "tf/transform_listener.h"
 #include <visualization_msgs/Marker.h>
@@ -67,7 +67,7 @@ class ActToMove_TB3
 		tf::StampedTransform transform_base;
 		
 		std_msgs::Float32 behav_cmd;
-		BP_experiment::Actions receivedAction;
+		habelar_msgs::Actions receivedAction;
 		nav_msgs::Odometry receivedPose;
 		geometry_msgs::Twist base_cmd;
 	
@@ -158,7 +158,7 @@ class ActToMove_TB3
 //	  	bool drive(ros::NodeHandle &node);
 	  	void bLaserCallback(const sensor_msgs::LaserScan & msg) ;
 	  	void pcl_received(const sensor_msgs::PointCloud2 & msg) ;
-		void actionCallback(BP_experiment::Actions msg);
+		void actionCallback(habelar_msgs::Actions msg);
 		void poseCallback(nav_msgs::Odometry msg);
 		void controlCallback(std_msgs::Bool msg);
 		void timerCallback(const ros::TimerEvent & msg);

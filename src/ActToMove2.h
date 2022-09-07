@@ -17,8 +17,8 @@
 #include <kobuki_msgs/BumperEvent.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
-#include "BP_experiment/Actions.h"
-#include "BP_experiment/ValidActions.h"
+#include "habelar_msgs/Actions.h"
+#include "habelar_msgs/ValidActions.h"
 
 #include "tf/transform_listener.h"
 #include <visualization_msgs/Marker.h>
@@ -70,7 +70,7 @@ class ActToMove2
 		tf::StampedTransform transform_base;
 		
 		std_msgs::Float32 behav_cmd;
-		BP_experiment::Actions receivedAction;
+		habelar_msgs::Actions receivedAction;
 		geometry_msgs::PoseWithCovarianceStamped receivedPose;
 		geometry_msgs::Twist base_cmd;
 	
@@ -167,7 +167,7 @@ class ActToMove2
 	  	int getBumpCode();
 	  	void processBumpCode(int c) ;
 	  	void pcl_received(const sensor_msgs::PointCloud2 & msg) ;
-		void actionCallback(BP_experiment::Actions msg);
+		void actionCallback(habelar_msgs::Actions msg);
 		void poseCallback(geometry_msgs::PoseWithCovarianceStamped msg);
 		void controlCallback(std_msgs::Bool msg);
 		void timerCallback(const ros::TimerEvent & msg);
