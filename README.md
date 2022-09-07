@@ -1,6 +1,6 @@
-# turtlebot navtools
+# turtlebot3 navtools
 
-A set of controllers for the Turtlebot 2 and 3 robots
+A set of controllers for the Turtlebot 3 robot
 
 # Contributors
 
