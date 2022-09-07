@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(turtlebot_navtools)
+cmake_minimum_required(VERSION 3.16.0)
+project(turtlebot3_navtools VERSION 0.1.0)
 
-set(CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_CXX_FLAGS}")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -18,8 +18,8 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   tf
   sensor_msgs
-  message_runtime 
-  BP_experiment
+  message_runtime
+  habelar_msgs
 )
 
 #INCLUDE_DIRECTORIES ( "$ENV{EIGEN3_INCLUDE_DIR}" )
@@ -60,21 +60,15 @@ add_definitions(${EIGEN_DEFINITIONS})
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
- add_message_files(
- FILES
- state.msg
- behaviour.msg
- 
- #commande_action.msg
- #Actions.msg
- )
+# add_message_files(
+# FILES
+# 
+#)
 
 ## Generate services in the 'srv' folder
-add_service_files(
-FILES
-NavService.srv
-  #Service2.srv
- )
+#add_service_files(
+#FILES
+#)
 
 
 ## Generate actions in the 'action' folder
@@ -85,10 +79,10 @@ NavService.srv
 # )
 
 ## Generate added messages and services with any dependencies listed here
- generate_messages(
-   DEPENDENCIES
-   std_msgs
- )
+#generate_messages(
+#DEPENDENCIES
+#std_msgs
+#)
 
 ###################################
 ## catkin specific configuration ##
@@ -184,41 +178,21 @@ include_directories(
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(turtle_explo2 src/exploration2.cpp)
-target_link_libraries(turtle_explo2 ${catkin_LIBRARIES})
-add_dependencies(turtle_explo2 BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
-
-#add_executable(service_exploration src/service_exploration.cpp)
-#target_link_libraries(service_exploration ${catkin_LIBRARIES})
-#add_dependencies(service_exploration BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
-
-#add_executable(run_stop_pr2 src/run_stop_pr2.cpp)
-#target_link_libraries(run_stop_pr2 ${catkin_LIBRARIES})
-#add_dependencies(run_stop_pr2 BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
-
-#add_executable(click_turn src/click_turn.cpp)
-#target_link_libraries(click_turn ${catkin_LIBRARIES})
-#add_dependencies(click_turn BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
-
-add_executable(turtle_explo_behav3 src/explo_behav3.cpp)
-target_link_libraries(turtle_explo_behav3 ${catkin_LIBRARIES})
-add_dependencies(turtle_explo_behav3 BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
-
-add_executable(turtle_state_slam src/state_slam.cpp)
-target_link_libraries(turtle_state_slam ${catkin_LIBRARIES})
-add_dependencies(turtle_state_slam BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
+#add_executable(turtle_explo2 src/exploration2.cpp)
+#target_link_libraries(turtle_explo2 ${catkin_LIBRARIES})
+#add_dependencies(turtle_explo2 habelar_msgs_gencpp turtlebot_navtools_generate_messages_cpp)
+#
+#add_executable(turtle_explo_behav3 src/explo_behav3.cpp)
+#target_link_libraries(turtle_explo_behav3 ${catkin_LIBRARIES})
+#add_dependencies(turtle_explo_behav3 habelar_msgs_gencpp turtlebot_navtools_generate_messages_cpp)
 
 add_executable(turtle_state_slam3 src/state_slam3.cpp)
 target_link_libraries(turtle_state_slam3 ${catkin_LIBRARIES})
-add_dependencies(turtle_state_slam3 BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
-
-add_executable(turtle_actToMov src/ActToMove.cpp)
-target_link_libraries(turtle_actToMov ${catkin_LIBRARIES})
-add_dependencies(turtle_actToMov BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
+#add_dependencies(turtle_state_slam3) # habelar_msgs_gencpp) # turtlebot_navtools_generate_messages_cpp)
 
 add_executable(turtle_actToMov2 src/ActToMove2.cpp)
 target_link_libraries(turtle_actToMov2 ${catkin_LIBRARIES})
-add_dependencies(turtle_actToMov2 BP_experiment_gencpp turtlebot_navtools_generate_messages_cpp)
+#add_dependencies(turtle_actToMov2) # habelar_msgs_gencpp) # turtlebot_navtools_generate_messages_cpp)
 
 add_executable(turtle_actToMov_TB3 src/ActToMove_TB3.cpp)
 target_link_libraries(turtle_actToMov_TB3 ${catkin_LIBRARIES})
